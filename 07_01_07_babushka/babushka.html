@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babushka</title>
+    <link rel="stylesheet" href="">
+
+    <style>
+        img {
+            width: 80%;
+        }
+
+        .personliste {
+            text-align: center;
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: repeat(1, 1fr);
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            height: 100%;
+        }
+
+        @media screen and (min-width:600px) {
+
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+
+            }
+
+            .personliste {
+                display: grid;
+                grid-gap: 5px;
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        @media screen and (min-width:768px) {
+
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 960px;
+                margin: 0 auto;
+            }
+
+            .personliste {
+                display: grid;
+                grid-gap: 5px;
+                grid-template-columns: repeat(3, 1fr)
+            }
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .filter:hover {
+            background: darkorange;
+        }
+
+        .klik {
+            background-color: darkorange;
+        }
+
+        h1 {
+            display: flex;
+            justify-content: center;
+            font-family: sans-serif;
+        }
+
+        h2 {
+            font-family: sans-serif;
+        }
+
+        p {
+            font-family: sans-serif;
+        }
+
+        #popup {
+            position: fixed;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            display: none;
+        }
+
+        #popup article {
+            width: 70vw;
+            min-height: 50vh;
+            background: #fff;
+            margin: 4rem auto;
+            padding: 10px;
+
+        }
+
+        .indhold {
+            width: 70vw;
+            min-height: 50vh;
+            background: white;
+            margin: 4rem auto;
+            padding: 10px;
+        }
+
+        .luk {
+            position: fixed;
+            right: 0;
+            font-size: 2rem;
+        }
+
+        #overskrift {
+            display: flex;
+            justify-content: center;
+            font-size: 4rem;
+            font-family: sans-serif;
+            color: white;
+        }
+
+        header {
+            background-color: brown;
+            padding: 50px;
+        }
+
+        footer {
+            background-color: brown;
+            padding: 20px;
+        }
+
+        #babush {
+            position: absolute;
+            width: 20vw;
+            height: 20vh;
+        }
+
+    </style>
+</head>
+
+<header>
+    <section>
+        <div id="overskrift">BISTRO BABUSHKA</div>
+    </section>
+</header>
+
+<nav>
+    <button class="filter klik" data-kategori="alle">Alle</button>
+    <button class="filter" data-kategori="forretter">Forretter</button>
+    <button class="filter" data-kategori="hovedretter">Hovedretter</button>
+    <button class="filter" data-kategori="desserter">Desserter</button>
+    <button class="filter" data-kategori="drikkevarer">Drikkevarer</button>
+</nav>
+
+<h1>Alle</h1>
+
+<body>
+
+    <template>
+        <article class="grid">
+            <h2></h2>
+            <img src="" alt="">
+            <p class="github"></p>
+            <p class="alder">kr</p>
+        </article>
+    </template>
+
+    <div id="popup">
+        <button class="luk">luk</button>
+        <article class="enkeltPerson">
+            <h2></h2>
+            <img class="billedeo" src="" alt="">
+            <p class="githubo"></p>
+        </article>
+    </div>
+
+    <section class="personliste"></section>
+
+    <footer id="kontakt">
+        <p>Bistro Babushka<br>
+            Nørrebrogade 51<br>
+            2200 København N<br><br>
+            Tlf. 28 25 77 71</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", getjson);
+
+        const modtagerKloner = document.querySelector(".personliste");
+        const temp = document.querySelector("template");
+        let personer;
+        let filter = "alle";
+
+        async function getjson() {
+
+            let jsondata = await fetch("https://spreadsheets.google.com/feeds/list/17Dd7DvkPaFamNUdUKlrFgnH6POvBJXac7qyiS6zNRw0/od6/public/values?alt=json");
+
+            console.log("jsondata", jsondata);
+            minJson = await jsondata.json();
+            visJson();
+            addEventListenersToButtons();
+        }
+
+        function visJson() {
+
+            modtagerKloner.innerHTML = "";
+
+
+            minJson.feed.entry.forEach((person) => {
+
+                if (filter == "alle" || filter == person.gsx$kategori.$t) {
+                    const klon = temp.cloneNode(true).content;
+                    klon.querySelector("h2").textContent = person.gsx$navn.$t;
+                    klon.querySelector(".github").textContent = person.gsx$kort.$t;;
+                    klon.querySelector("img").src = "imgs/small/" + person.gsx$billede.$t + "-sm.jpg";
+
+
+                    klon.querySelector(".alder").textContent += person.gsx$pris.$t;
+                    modtagerKloner.appendChild(klon);
+                    modtagerKloner.lastElementChild.addEventListener("click", () => {
+                        visSingle(person)
+                    });
+                }
+
+            })
+        }
+
+        function visSingle(person) {
+            document.querySelector("#popup").style.display = "block";
+            document.querySelector("#popup .luk").addEventListener("click", lukSingle);
+            document.querySelector(".enkeltPerson h2").textContent = person.gsx$navn.$t;
+            document.querySelector(".enkeltPerson .billedeo").src = "imgs/small/" + person.gsx$billede.$t + "-sm.jpg";
+            document.querySelector(".enkeltPerson .billedeo").alt = person.gsx$navn.$t;
+            document.querySelector(".enkeltPerson .githubo").textContent = person.gsx$lang.$t;
+        }
+
+        function lukSingle() {
+            document.querySelector("#popup").style.display = "none";
+        }
+
+        function addEventListenersToButtons() {
+            document.querySelectorAll(".filter").forEach(elm => {
+                elm.addEventListener("click", filtrering);
+            })
+        }
+
+        function filtrering() {
+            filter = this.dataset.kategori;
+            document.querySelector("h1").textContent = this.textContent;
+            document.querySelectorAll(".filter").forEach(elm => {
+                elm.classList.remove("klik");
+            })
+            this.classList.add("klik");
+            visJson();
+        }
+
+    </script>
+</body>
+
+</html>
